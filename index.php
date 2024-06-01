@@ -8,8 +8,13 @@ $password = "admin123";
 $database = "csvimport";
 
 $conn = new mysqli($servername, $username, $password, $database);
+
+define('PAGINATION_DISPLAY_COUNT', 2); // Number of pages to display before and after the current page
+
 $result1 = [];
 $row = [];
+$current_page = 1;
+$total_pages = 1;
 // Check connection
 if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
@@ -158,27 +163,35 @@ if(isset($_POST['submit'])){
 }
 
 // User login handling
-if(isset($_POST['login'])){
+if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $sql = "SELECT * FROM users WHERE username='$username' AND password='$password'";
+    $sql = "SELECT * FROM users WHERE username='$username'";
     $result = $conn->query($sql);
 
-    if($result->num_rows > 0){
-        $_SESSION['username'] = $username;
-        header("Location: index.php");
+    if ($result->num_rows > 0) {
+        $user = $result->fetch_assoc();
+        if (password_verify($password, $user['password'])) {
+            $_SESSION['username'] = $username;
+            header("Location: index.php");
+        } else {
+            echo "Invalid username or password";
+        }
     } else {
         echo "Invalid username or password";
     }
 }
 
 // User registration handling
-if(isset($_POST['register'])){
+if (isset($_POST['register'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $sql = "INSERT INTO users (username, password) VALUES ('$username', '$password')";
+    // Hash the password before storing it
+    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+
+    $sql = "INSERT INTO users (username, password) VALUES ('$username', '$hashed_password')";
     if ($conn->query($sql) === TRUE) {
         echo "Registration successful";
     } else {
@@ -186,14 +199,43 @@ if(isset($_POST['register'])){
     }
 }
 
-if(isset($_GET['search'])){
-    $search = isset($_GET['search']) ? $_GET['search'] : '';
-    $sql = "SELECT * FROM indirrizzi WHERE gestore LIKE '%$search%' OR mac_address LIKE '%$search%' OR num_awp LIKE '%$search%' OR identificativo LIKE '%$search%' OR modello LIKE '%$search%' OR codiceUbicazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirizzo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR modelloAAMS LIKE '%$search%'";
-    $result1 = $conn->query($sql);
-    $row = $result1->fetch_assoc();
-    // $total_records = $row['total'];
-}
+$search = isset($_GET['search']) ? $_GET['search'] : '';
 
+// Check if search is performed
+if ($search !== '') {
+    // Perform search query
+    $sql = "SELECT * FROM indirrizzi WHERE gestore LIKE '%$search%' OR mac_address LIKE '%$search%' OR num_awp LIKE '%$search%' OR identificativo LIKE '%$search%' OR modello LIKE '%$search%' OR codiceUbicazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirizzo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR modelloAAMS LIKE '%$search%'";
+    $result = $conn->query($sql);
+    $total_records = $result->num_rows;
+    
+    $records_per_page = 10;
+    $total_pages = ceil($total_records / $records_per_page);
+    
+    if (isset($_GET['page']) && is_numeric($_GET['page'])) {
+        $current_page = (int) $_GET['page'];
+    }
+
+    $offset = ($current_page - 1) * $records_per_page;
+
+    $sql = "SELECT * FROM indirrizzi WHERE gestore LIKE '%$search%' OR mac_address LIKE '%$search%' OR num_awp LIKE '%$search%' OR identificativo LIKE '%$search%' OR modello LIKE '%$search%' OR codiceUbicazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirizzo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR modelloAAMS LIKE '%$search%' LIMIT $offset, $records_per_page";
+    $result1 = $conn->query($sql);
+} else {
+    // Load initial data without search
+    $records_per_page = 10;
+    $sql = "SELECT * FROM indirrizzi";
+    $result = $conn->query($sql);
+    $total_records = $result->num_rows;
+    $total_pages = ceil($total_records / $records_per_page);
+
+    if (isset($_GET['page']) && is_numeric($_GET['page'])) {
+        $current_page = (int) $_GET['page'];
+    }
+
+    $offset = ($current_page - 1) * $records_per_page;
+
+    $sql = "SELECT * FROM indirrizzi LIMIT $offset, $records_per_page";
+    $result1 = $conn->query($sql);
+}
 ?>
 
 <!DOCTYPE html>
@@ -234,7 +276,7 @@ if(isset($_GET['search'])){
                 </div>
             </div>
         <?php } else { ?>
-            <h3>Upload CSV/XLSM/ODS File</h2>
+            <h3>Upload CSV/XLSM/ODS File</h3>
             <form method="post" action="" enctype="multipart/form-data" class="mb-4">
                 <div class="input-group">
                     <div class="custom-file">
@@ -248,26 +290,64 @@ if(isset($_GET['search'])){
             </form>
 
 
-            <h3>Search Data</h2>
+            <h3>Search Data</h3>
             <form method="get" action="" class="mb-4">
                 <div class="input-group">
-                    <input type="text" name="search" class="form-control" placeholder="Search">
-                    <div class="input-group-append">
-                        <button type="submit" class="btn btn-primary">Search</button>
-                    </div>
-                </div>
+                    <input type="text" name="search" class="form-control" value="<?php echo htmlspecialchars($search); ?>">
+                    <button type="submit"  class="btn btn-primary">Search</button>
+                </div>            
             </form>
 
+            <h3>Data Table</h3>
             
-            <h3>Data Table</h2>
+            <div style="float: left;">Total Records: <?php echo $total_records; ?></div>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination" style="float: right; margin:0">
+                    <?php if ($current_page > 1): ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page - 1; ?>">Previous</a>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php if ($current_page > PAGINATION_DISPLAY_COUNT + 1): ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=1">1</a>
+                        </li>
+                        <?php if ($current_page > PAGINATION_DISPLAY_COUNT + 2): ?>
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        <?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php for ($i = max(1, $current_page - PAGINATION_DISPLAY_COUNT); $i <= min($total_pages, $current_page + PAGINATION_DISPLAY_COUNT); $i++): ?>
+                        <li class="page-item <?php if ($i == $current_page) echo 'active'; ?>">
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                        </li>
+                    <?php endfor; ?>
+
+                    <?php if ($current_page < $total_pages - PAGINATION_DISPLAY_COUNT): ?>
+                        <?php if ($current_page < $total_pages - PAGINATION_DISPLAY_COUNT - 1): ?>
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        <?php endif; ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $total_pages; ?>"><?php echo $total_pages; ?></a>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php if ($current_page < $total_pages): ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page + 1; ?>">Next</a>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </nav>
             <div class="table-responsive">
                 <table class="table table-striped">
                     <thead>
                         <tr>
                             <th>#</th>
                             <th>Gestore</th>
-                            <th>Mac Address</th>
-                            <th>Num Awp</th>
+                            <th>MAC Address</th>
+                            <th>Num AWP</th>
                             <th>Identificativo</th>
                             <th>Modello</th>
                             <th>Codice Ubicazione</th>
@@ -280,9 +360,9 @@ if(isset($_GET['search'])){
                         </tr>
                     </thead>
                     <tbody>
-                        <?php if(!empty($row)): ?>
-                            <?php $index = 1; ?>
-                            <?php while ($row): ?>
+                        <?php if ($result1->num_rows > 0): ?>
+                            <?php $index = $offset + 1; ?>
+                            <?php while ($row = $result1->fetch_assoc()): ?>
                                 <tr>
                                     <td><?php echo $index++; ?></td>
                                     <td><?php echo $row['gestore']; ?></td>
@@ -301,13 +381,54 @@ if(isset($_GET['search'])){
                             <?php endwhile; ?>
                         <?php else: ?>
                             <tr>
-                                <td colspan="9" class="text-center">No results found</td>
+                                <td colspan="13" class="text-center">No results found</td>
                             </tr>
                         <?php endif; ?>
                     </tbody>
                 </table>
             </div>
-        <?php } ?>
+            <div style="float: left;">Total Records: <?php echo $total_records; ?></div>
+            <nav aria-label="Page navigation example">
+                <ul class="pagination" style="float: right; margin-top:0">
+                    <?php if ($current_page > 1): ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page - 1; ?>">Previous</a>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php if ($current_page > PAGINATION_DISPLAY_COUNT + 1): ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=1">1</a>
+                        </li>
+                        <?php if ($current_page > PAGINATION_DISPLAY_COUNT + 2): ?>
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        <?php endif; ?>
+                    <?php endif; ?>
+
+                    <?php for ($i = max(1, $current_page - PAGINATION_DISPLAY_COUNT); $i <= min($total_pages, $current_page + PAGINATION_DISPLAY_COUNT); $i++): ?>
+                        <li class="page-item <?php if ($i == $current_page) echo 'active'; ?>">
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                        </li>
+                    <?php endfor; ?>
+
+                    <?php if ($current_page < $total_pages - PAGINATION_DISPLAY_COUNT): ?>
+                        <?php if ($current_page < $total_pages - PAGINATION_DISPLAY_COUNT - 1): ?>
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        <?php endif; ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $total_pages; ?>"><?php echo $total_pages; ?></a>
+                        </li>
+                    <?php endif; ?>
+
+                    <?php if ($current_page < $total_pages): ?>
+                        <li class="page-item">
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page + 1; ?>">Next</a>
+                        </li>
+                    <?php endif; ?>
+                </ul>
+            </nav>
+
+            <?php $conn->close(); }?>
     </div>
     <script>
         // Get the file input element
