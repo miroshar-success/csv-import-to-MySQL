@@ -38,8 +38,15 @@ if(isset($_POST['submit'])){
             }
             fclose($handle);
         }
-    } elseif ($fileType === 'xlsm') {
+    } elseif ($fileType === 'xlsm' || $fileType === 'ods') {
         require 'vendor/autoload.php';
+        $conn->query("DELETE FROM `indirrizzi`"); 
+        $conn->query("DELETE FROM `ciclo`"); 
+        $conn->query("DELETE FROM `fineciclo`"); 
+        $conn->query("DELETE FROM `parc`"); 
+        $conn->query("DELETE FROM `provincia`"); 
+        $conn->query("DELETE FROM `lotto`"); 
+
         $meta = [
             [
                 "db" => [
