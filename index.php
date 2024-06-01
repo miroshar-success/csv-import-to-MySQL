@@ -96,6 +96,22 @@ if(isset($_POST['submit'])){
                     ]
                 ]
             ],
+            // [
+            //     "db" => [
+            //         "table" => 'lotto',
+            //         "columns" => [
+            //             "codice_awp"
+            //         ],
+            //     ],
+            //     "sheet" => [
+            //         "index" => 3,
+            //         "start_row" => 216,
+            //         "start_col" => "A",
+            //         "columns" => [
+            //             0
+            //         ]
+            //     ]
+            // ],
             [
                 "db" => [
                     "table" => 'provincia',
@@ -211,7 +227,7 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
 // Check if search is performed
 if ($search !== '') {
     // Perform search query
-    $sql = "SELECT * FROM indirrizzi WHERE gestore LIKE '%$search%' OR mac_address LIKE '%$search%' OR num_awp LIKE '%$search%' OR identificativo LIKE '%$search%' OR modello LIKE '%$search%' OR codiceUbicazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirizzo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR modelloAAMS LIKE '%$search%'";
+    $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR % LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%'";
     $result = $conn->query($sql);
     $total_records = $result->num_rows;
     
@@ -224,12 +240,12 @@ if ($search !== '') {
 
     $offset = ($current_page - 1) * $records_per_page;
 
-    $sql = "SELECT * FROM indirrizzi WHERE gestore LIKE '%$search%' OR mac_address LIKE '%$search%' OR num_awp LIKE '%$search%' OR identificativo LIKE '%$search%' OR modello LIKE '%$search%' OR codiceUbicazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirizzo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR modelloAAMS LIKE '%$search%' LIMIT $offset, $records_per_page";
+    $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR % LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%' LIMIT $offset, $records_per_page";
     $result1 = $conn->query($sql);
 } else {
     // Load initial data without search
     $records_per_page = 10;
-    $sql = "SELECT * FROM indirrizzi";
+    $sql = "SELECT * FROM lotto";
     $result = $conn->query($sql);
     $total_records = $result->num_rows;
     $total_pages = ceil($total_records / $records_per_page);
@@ -240,7 +256,7 @@ if ($search !== '') {
 
     $offset = ($current_page - 1) * $records_per_page;
 
-    $sql = "SELECT * FROM indirrizzi LIMIT $offset, $records_per_page";
+    $sql = "SELECT * FROM lotto LIMIT $offset, $records_per_page";
     $result1 = $conn->query($sql);
 }
 ?>
@@ -352,18 +368,26 @@ if ($search !== '') {
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Gestore</th>
-                            <th>MAC Address</th>
-                            <th>Num AWP</th>
-                            <th>Identificativo</th>
-                            <th>Modello</th>
-                            <th>Codice Ubicazione</th>
-                            <th>Ubicazione</th>
-                            <th>Indirizzo</th>
-                            <th>Comune</th>
-                            <th>Provincia</th>
-                            <th>Regione</th>
-                            <th>Modello AAMS</th>
+                            <th>CODICE AWP</th>
+                            <th>DENOMINAZIONE</th>
+                            <th>UBICAZIONE</th>
+                            <th>INDIRRIZO</th>
+                            <th>COMUNE</th>
+                            <th>PROVINCIA</th>
+                            <th>REGIONE</th>
+                            <th>3</th>
+                            <th>CICLOIN</th>
+                            <th>CICLOUT</th>
+                            <th>DATA</th>
+                            <th>SOPRA</th>
+                            <th>VINCITA</th>
+                            <th>MANCA</th>
+                            <th>CICLO</th>
+                            <th>%</th>
+                            <th>TOTIN</th>
+                            <th>TOTOUT</th>
+                            <th>FINECICLO</th>
+                            <th>NCICLI</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -372,18 +396,27 @@ if ($search !== '') {
                             <?php while ($row = $result1->fetch_assoc()): ?>
                                 <tr>
                                     <td><?php echo $index++; ?></td>
-                                    <td><?php echo $row['gestore']; ?></td>
-                                    <td><?php echo $row['mac_address']; ?></td>
-                                    <td><?php echo $row['num_awp']; ?></td>
-                                    <td><?php echo $row['identificativo']; ?></td>
-                                    <td><?php echo $row['modello']; ?></td>
-                                    <td><?php echo $row['codiceUbicazione']; ?></td>
+                                    <td><?php echo $row['codice_awp']; ?></td>
+                                    <td><?php echo $row['denominazione']; ?></td>
                                     <td><?php echo $row['ubicazione']; ?></td>
-                                    <td><?php echo $row['indirizzo']; ?></td>
+                                    <td><?php echo $row['indirrizo']; ?></td>
                                     <td><?php echo $row['comune']; ?></td>
                                     <td><?php echo $row['provincia']; ?></td>
                                     <td><?php echo $row['regione']; ?></td>
-                                    <td><?php echo $row['modelloAAMS']; ?></td>
+                                    <td><?php echo $row['3']; ?></td>
+                                    <td><?php echo $row['cicloin']; ?></td>
+                                    <td><?php echo $row['ciclout']; ?></td>
+                                    <td><?php echo $row['data']; ?></td>
+                                    <td><?php echo $row['sopra']; ?></td>
+                                    <td><?php echo $row['vincita']; ?></td>
+                                    <td><?php echo $row['manca']; ?></td>
+                                    <td><?php echo $row['ciclo']; ?></td>
+                                    <td><?php echo $row['%']; ?></td>
+                                    <td><?php echo $row['totin']; ?></td>
+                                    <td><?php echo $row['totout']; ?></td>
+                                    <td><?php echo $row['fineciclo']; ?></td>
+                                    <td><?php echo $row['ncicli']; ?></td>
+
                                 </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
