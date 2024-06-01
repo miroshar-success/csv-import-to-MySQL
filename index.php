@@ -207,20 +207,20 @@ if (isset($_POST['login'])) {
 }
 
 // User registration handling
-if (isset($_POST['register'])) {
-    $username = $_POST['username'];
-    $password = $_POST['password'];
+// if (isset($_POST['register'])) {
+//     $username = $_POST['username'];
+//     $password = $_POST['password'];
 
-    // Hash the password before storing it
-    $hashed_password = password_hash($password, PASSWORD_BCRYPT);
+//     // Hash the password before storing it
+//     $hashed_password = password_hash($password, PASSWORD_BCRYPT);
 
-    $sql = "INSERT INTO users (username, password) VALUES ('$username', '$hashed_password')";
-    if ($conn->query($sql) === TRUE) {
-        echo "Registration successful";
-    } else {
-        echo "Error: " . $sql . "<br>" . $conn->error;
-    }
-}
+//     $sql = "INSERT INTO users (username, password) VALUES ('$username', '$hashed_password')";
+//     if ($conn->query($sql) === TRUE) {
+//         echo "Registration successful";
+//     } else {
+//         echo "Error: " . $sql . "<br>" . $conn->error;
+//     }
+// }
 
 $search = isset($_GET['search']) ? $_GET['search'] : '';
 
@@ -285,7 +285,7 @@ if ($search !== '') {
                         <button type="submit" name="login" class="btn btn-primary">Login</button>
                     </form>
                 </div>
-                <div class="col-md-6">
+                <!-- <div class="col-md-6">
                     <h2>Register</h2>
                     <form method="post" action="">
                         <div class="form-group">
@@ -296,7 +296,7 @@ if ($search !== '') {
                         </div>
                         <button type="submit" name="register" class="btn btn-primary">Register</button>
                     </form>
-                </div>
+                </div> -->
             </div>
         <?php } else { ?>
             <h3>Upload CSV/XLSM/ODS File</h3>
