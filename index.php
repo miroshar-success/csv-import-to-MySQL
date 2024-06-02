@@ -57,6 +57,7 @@ if(isset($_POST['submit'])){
                 ],
                 "sheet" => [
                     "index" => 0,
+                    "formula" => false,
                     "start_row" => 3,
                     "start_col" => "F",
                     "columns" => [
@@ -73,6 +74,7 @@ if(isset($_POST['submit'])){
                 ],
                 "sheet" => [
                     "index" => 1,
+                    "formula" => false,
                     "start_row" => 2,
                     "start_col" => "A",
                     "columns" => [
@@ -89,6 +91,7 @@ if(isset($_POST['submit'])){
                 ],
                 "sheet" => [
                     "index" => 2,
+                    "formula" => false,
                     "start_row" => 3,
                     "start_col" => "A",
                     "columns" => [
@@ -96,22 +99,23 @@ if(isset($_POST['submit'])){
                     ]
                 ]
             ],
-            // [
-            //     "db" => [
-            //         "table" => 'lotto',
-            //         "columns" => [
-            //             "codice_awp"
-            //         ],
-            //     ],
-            //     "sheet" => [
-            //         "index" => 3,
-            //         "start_row" => 216,
-            //         "start_col" => "A",
-            //         "columns" => [
-            //             0
-            //         ]
-            //     ]
-            // ],
+            [
+                "db" => [
+                    "table" => 'lotto',
+                    "columns" => [
+                        "codice_awp", "fineciclo"
+                    ],
+                ],
+                "sheet" => [
+                    "index" => 3,
+                    "formula" => true,
+                    "start_row" => 4,
+                    "start_col" => "A",
+                    "columns" => [
+                        "A", "S"
+                    ]
+                ]
+            ],
             [
                 "db" => [
                     "table" => 'provincia',
@@ -121,6 +125,7 @@ if(isset($_POST['submit'])){
                 ],
                 "sheet" => [
                     "index" => 4,
+                    "formula" => false,
                     "start_row" => 1,
                     "start_col" => "A",
                     "columns" => [
@@ -137,6 +142,7 @@ if(isset($_POST['submit'])){
                 ],
                 "sheet" => [
                     "index" => 5,
+                    "formula" => false,
                     "start_row" => 3,
                     "start_col" => "A",
                     "columns" => [
@@ -150,20 +156,48 @@ if(isset($_POST['submit'])){
 
         foreach ($meta as $idx => $e) {
             
-            $sheet = $spreadsheet->setActiveSheetIndex($e["sheet"]["index"]);
+            if ($e["sheet"]["formula"] == false) {
+                // Set the active sheet based on the index specified in metadata
+                $sheet = $spreadsheet->setActiveSheetIndex($e["sheet"]["index"]);
+    
+                // Get the highest column and row numbers in the sheet
+                $maxCol = $sheet->getHighestColumn();
+                $maxRow = $sheet->getHighestRow();
+    
+                // Generate the range string for fetching data
+                $range = $e['sheet']['start_col'] . $e['sheet']['start_row'] . ":{$maxCol}{$maxRow}";
+    
+                // Fetch the data within the specified range as an array
+                $data = $sheet->rangeToArray($range, null, true, true, false, true);
+            }
+            else {
+                $sheet = $spreadsheet->setActiveSheetIndex($e["sheet"]["index"]);
+                $maxCol = \PhpOffice\PhpSpreadsheet\Cell\Coordinate::columnIndexFromString($sheet->getHighestColumn());
+                $maxRow = $sheet->getHighestRow();
 
-            $maxCol = $sheet->getHighestColumn();
-            $maxRow = $sheet->getHighestRow();
-
-            $data = $sheet->rangeToArray($e['sheet']['start_col'] . $e['sheet']['start_row'] . ":{$maxCol}$maxRow");
+                $data = [];
+                for ($row = $e['sheet']['start_row']; $row <= $maxRow; $row++) {
+                    $rowData = [];
+                    foreach ($e['sheet']['columns'] as $col) {
+                        $colLetter = $col;// \PhpOffice\PhpSpreadsheet\Cell\Coordinate::stringFromColumnIndex($col + 1);
+                        $value = $sheet->getCell($colLetter . $row)->getValue();
+                        // $value = $cell->isFormula() ? $cell->getCalculatedValue() : $cell->getValue();
+                        if ($value !== null && $value !== '') {
+                            $rowData[] = str_replace("\"", "", $value);
+                        }
+                    }
+                    if (count($rowData) === count($e['sheet']['columns'])) {
+                        $data[] = $rowData;
+                    }
+                }
+            }
 
             $q_rows = [];
             for ($i = 0; $i < count($data); $i++) {
                 $row = $data[$i];
-
                 $arr_data = [];
-                foreach ($e['sheet']["columns"] as $col) {
-                    $val = str_replace("\"", "", $row[$col]);
+                foreach ($e['sheet']["columns"] as $idx => $col) {
+                    $val = str_replace("\"", "", $e["sheet"]["formula"] == false ? $row[$col] : $row[$idx]);
                     array_push($arr_data, "\"{$val}\"");
                 }
                 array_push($q_rows, "(" . implode(',', $arr_data) . ")");
@@ -182,6 +216,24 @@ if(isset($_POST['submit'])){
             $conn->query($q);
         }
         
+        $conn->query("UPDATE `lotto` SET
+            `denominazione` = (SELECT IFNULL(`ubicazione`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
+            `ubicazione` = (SELECT IFNULL(`codice_ubicazione`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
+            `data` = (SELECT IFNULL(`ultima_lett`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
+            `%` = (SELECT IFNULL(SUBSTR(`vincite`, 1, 2), '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
+            `totin` = (SELECT IFNULL(`ult_cnttotin`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
+            `totout` = (SELECT IFNULL(`ult_cnttotot`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
+            `3` = (SELECT IFNULL(`titolo`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1)");
+
+        $conn->query("UPDATE `lotto` SET 
+            `indirrizo` = (SELECT IFNULL(`indirizzo`, '') FROM `indirrizzi` WHERE `indirrizzi`.`codiceUbicazione` = `lotto`.`ubicazione` LIMIT 1),
+            `comune` = (SELECT IFNULL(`comune`, '') FROM `indirrizzi` WHERE `indirrizzi`.`codiceUbicazione` = `lotto`.`ubicazione` LIMIT 1),
+            `provincia` = (SELECT IFNULL(`provincia`, '') FROM `indirrizzi` WHERE `indirrizzi`.`codiceUbicazione` = `lotto`.`ubicazione` LIMIT 1),
+            `regione` = (SELECT IFNULL(`regione`, '') FROM `indirrizzi` WHERE `indirrizzi`.`codiceUbicazione` = `lotto`.`ubicazione` LIMIT 1)");
+
+        $conn->query("UPDATE `lotto` SET 
+            `ciclo` = (SELECT IFNULL(`colH`, '') FROM `ciclo` WHERE `ciclo`.`colA` = `lotto`.`3` LIMIT 1)");
+
     }
 }
 
@@ -190,20 +242,20 @@ if (isset($_POST['login'])) {
     $username = $_POST['username'];
     $password = $_POST['password'];
 
-    $sql = "SELECT * FROM users WHERE username='$username'";
+    $sql = "SELECT * FROM users WHERE username='$username' AND `password`='$password'";
     $result = $conn->query($sql);
 
     if ($result->num_rows > 0) {
-        $user = $result->fetch_assoc();
-        if (password_verify($password, $user['password'])) {
-            $_SESSION['username'] = $username;
-            header("Location: index.php");
-        } else {
-            echo "Invalid username or password";
-        }
+        $_SESSION['username'] = $username;
+        header("Location: index.php");
     } else {
         echo "Invalid username or password";
     }
+}
+
+if (isset($_POST['signout'])) {
+    session_destroy();
+    header("Location: index.php");
 }
 
 // User registration handling
@@ -227,7 +279,7 @@ $search = isset($_GET['search']) ? $_GET['search'] : '';
 // Check if search is performed
 if ($search !== '') {
     // Perform search query
-    $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR % LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%'";
+    $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR percent LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%'";
     $result = $conn->query($sql);
     $total_records = $result->num_rows;
     
@@ -240,7 +292,7 @@ if ($search !== '') {
 
     $offset = ($current_page - 1) * $records_per_page;
 
-    $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR % LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%' LIMIT $offset, $records_per_page";
+    $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR percent LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%' LIMIT $offset, $records_per_page";
     $result1 = $conn->query($sql);
 } else {
     // Load initial data without search
@@ -267,7 +319,7 @@ if ($search !== '') {
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>PHP Import Data</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
 </head>
 <body>
     <div class="container mt-5">
@@ -299,6 +351,12 @@ if ($search !== '') {
                 </div> -->
             </div>
         <?php } else { ?>
+            <form method="post" action="" class="mb-4">
+                <div class="input-group">
+                    <input type="hidden" name="signout" />
+                    <button type="submit"  class="btn btn-primary" style="float: right;">Sign Out</button>
+                </div>            
+            </form>
             <h3>Upload CSV/XLSM/ODS File</h3>
             <form method="post" action="" enctype="multipart/form-data" class="mb-4">
                 <div class="input-group">
@@ -364,7 +422,7 @@ if ($search !== '') {
                 </ul>
             </nav>
             <div class="table-responsive">
-                <table class="table table-striped">
+                <table class="table table-striped table-hover">
                     <thead>
                         <tr>
                             <th>#</th>
@@ -397,26 +455,42 @@ if ($search !== '') {
                                 <tr>
                                     <td><?php echo $index++; ?></td>
                                     <td><?php echo $row['codice_awp']; ?></td>
-                                    <td><?php echo $row['denominazione']; ?></td>
+                                    <td class="text-nowrap"><?php echo $row['denominazione']; ?></td>
                                     <td><?php echo $row['ubicazione']; ?></td>
-                                    <td><?php echo $row['indirrizo']; ?></td>
+                                    <td class="text-nowrap"><?php echo $row['indirrizo']; ?></td>
                                     <td><?php echo $row['comune']; ?></td>
                                     <td><?php echo $row['provincia']; ?></td>
                                     <td><?php echo $row['regione']; ?></td>
                                     <td><?php echo $row['3']; ?></td>
-                                    <td><?php echo $row['cicloin']; ?></td>
-                                    <td><?php echo $row['ciclout']; ?></td>
-                                    <td><?php echo $row['data']; ?></td>
-                                    <td><?php echo $row['sopra']; ?></td>
-                                    <td><?php echo $row['vincita']; ?></td>
-                                    <td><?php echo $row['manca']; ?></td>
-                                    <td><?php echo $row['ciclo']; ?></td>
-                                    <td><?php echo $row['%']; ?></td>
-                                    <td><?php echo $row['totin']; ?></td>
-                                    <td><?php echo $row['totout']; ?></td>
-                                    <td><?php echo $row['fineciclo']; ?></td>
-                                    <td><?php echo $row['ncicli']; ?></td>
 
+                                    <?php 
+                                        $I_ = empty($row['ciclo']) ? 0 : ($row['totin'] / 100) % $row['ciclo'];
+                                        
+                                        $O_ = empty($row['ciclo']) ? 0 : $row['ciclo'];
+                                        $P_ = empty($row['percent']) ? 0 : $row['percent'];
+                                        $Q_ = empty($row['totin']) ? 0 : $row['totin'] / 100;
+                                        $T_ = empty($row['ciclo']) ? 0 : floor($row['totin'] / $row['ciclo'] / 100);
+                                        $S_ = $row['fineciclo'];
+                                        $R_ = empty($row['totout']) ? 0 : $row['totout'] / 100;
+
+                                        $J_ = $R_ - $T_ * ($O_ * $P_  / 100 + $S_);
+                                        $L_ = $I_ * $P_ / 100 - $J_;
+                                        $N_ = $O_ - $I_;
+                                        $M_ = $N_ * $P_ / 100 - $N_ + $L_;
+
+                                    ?>
+                                    <td><?php echo $I_ ? $I_ : "";?></td>
+                                    <td><?php echo $J_ ? $J_ : ""; ?></td>
+                                    <td><?php echo $row['data']; ?></td>
+                                    <td><?php echo $L_ ? $L_ : ""; ?></td>
+                                    <td><?php echo $M_ ? $M_ : ""; ?></td>
+                                    <td><?php echo $N_ ? $N_ : ""; ?></td>
+                                    <td><?php echo $O_ ? $O_ : ""; ?></td>
+                                    <td><?php echo $P_ ? $P_ : ""; ?></td>
+                                    <td><?php echo $Q_ ? $Q_ : ""; ?></td>
+                                    <td><?php echo $R_ ? $R_ : ""; ?></td>
+                                    <td><?php echo $S_ ? $S_ : ""; ?></td>
+                                    <td><?php echo $T_ ? $T_ : "";?></td>
                                 </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
@@ -481,8 +555,8 @@ if ($search !== '') {
             label.textContent = fileName;
         });
     </script>
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+    <script src="js/jquery-3.5.1.slim.min.js"></script>
+    <script src="js/popper.min.js"></script>
+    <script src="js/bootstrap.min.js"></script>
 </body>
 </html>
