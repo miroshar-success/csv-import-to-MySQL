@@ -8,7 +8,7 @@
 2. Install PhpSpreadsheet
    - Once Composer is installed, you can use it to install PhpSpreadsheet.
    - Open your terminal and navigate to your project directory, then run the following command
-   - <code>composer require phpoffice/phpspreadsheet</code>
+   - <code> composer require phpoffice/phpspreadsheet </code>
 ## Development guidence
 1. PHP version: 8+
 2. MySQL version: any version
