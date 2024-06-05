@@ -275,6 +275,9 @@ if (isset($_POST['signout'])) {
 // }
 
 $search = isset($_GET['search']) ? $_GET['search'] : '';
+$sortColumn = isset($_GET['sort']) ? $_GET['sort'] : 'codice_awp';
+$sortOrder = isset($_GET['order']) ? $_GET['order'] : 'ASC';
+$groupBy = isset($_GET['group_by']) ? $_GET['group_by'] : '';
 
 // Check if search is performed
 if ($search !== '') {
@@ -292,7 +295,15 @@ if ($search !== '') {
 
     $offset = ($current_page - 1) * $records_per_page;
 
-    $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR percent LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%' LIMIT $offset, $records_per_page";
+    
+    $orderClause = " ORDER BY ";
+    $orderClause .= "$sortColumn $sortOrder";
+   
+    if (!empty($groupBy)) {
+        $sql = "SELECT * FROM lotto WHERE $groupBy LIKE '%$search%' $orderClause LIMIT $offset, $records_per_page";    
+    } else {
+        $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR percent LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%' $orderClause LIMIT $offset, $records_per_page";
+    }
     $result1 = $conn->query($sql);
 } else {
     // Load initial data without search
@@ -308,9 +319,18 @@ if ($search !== '') {
 
     $offset = ($current_page - 1) * $records_per_page;
 
-    $sql = "SELECT * FROM lotto LIMIT $offset, $records_per_page";
+    $orderClause = " ORDER BY ";
+    $orderClause .= "$sortColumn $sortOrder";
+
+    if (!empty($groupBy)) {
+        $sql = "SELECT * FROM lotto WHERE $groupBy LIKE '%$search%' $orderClause LIMIT $offset, $records_per_page";    
+    } else {
+        $sql = "SELECT * FROM lotto $orderClause LIMIT $offset, $records_per_page";
+    }
+    print_r($sql);
     $result1 = $conn->query($sql);
 }
+
 ?>
 
 <!DOCTYPE html>
@@ -374,6 +394,30 @@ if ($search !== '') {
             <h3>Search Data</h3>
             <form method="get" action="" class="mb-4">
                 <div class="input-group">
+                    <select name="group_by" class="form-control">
+                        <option value="" <?php echo empty($groupBy) ? 'selected' : ''; ?>>All</option>
+                        <option value="codice_awp" <?php echo $groupBy == 'codice_awp' ? 'selected' : ''; ?>>CODICE AWP</option>
+                        <option value="denominazione" <?php echo $groupBy == 'denominazione' ? 'selected' : ''; ?>>DENOMINAZIONE</option>
+                        <option value="ubicazione" <?php echo $groupBy == 'ubicazione' ? 'selected' : ''; ?>>UBICAZIONE</option>
+                        <option value="indirrizo" <?php echo $groupBy == 'indirrizo' ? 'selected' : ''; ?>>INDIRRIZO</option>
+                        <option value="comune" <?php echo $groupBy == 'comune' ? 'selected' : ''; ?>>COMUNE</option>
+                        <option value="provincia" <?php echo $groupBy == 'provincia' ? 'selected' : ''; ?>>PROVINCIA</option>
+                        <option value="regione" <?php echo $groupBy == 'regione' ? 'selected' : ''; ?>>REGIONE</option>
+                        <option value="3" <?php echo $groupBy == '3' ? 'selected' : ''; ?>>3</option>
+                        <option value="ciclo" <?php echo $groupBy == 'ciclo' ? 'selected' : ''; ?>>CICLOIN</option>
+                        <option value="ciclout" <?php echo $groupBy == 'ciclout' ? 'selected' : ''; ?>>CICLOUT</option>
+                        <option value="data" <?php echo $groupBy == 'data' ? 'selected' : ''; ?>>DATA</option>
+                        <option value="sopra" <?php echo $groupBy == 'sopra' ? 'selected' : ''; ?>>SOPRA</option>
+                        <option value="vincita" <?php echo $groupBy == 'vincita' ? 'selected' : ''; ?>>VINCITA</option>
+                        <option value="manca" <?php echo $groupBy == 'manca' ? 'selected' : ''; ?>>MANCA</option>
+                        <option value="ciclo" <?php echo $groupBy == 'ciclo' ? 'selected' : ''; ?>>CICLO</option>
+                        <option value="percent" <?php echo $groupBy == 'percent' ? 'selected' : ''; ?>>%</option>
+                        <option value="totin" <?php echo $groupBy == 'totin' ? 'selected' : ''; ?>>TOTIN</option>
+                        <option value="totout" <?php echo $groupBy == 'totout' ? 'selected' : ''; ?>>TOTOUT</option>
+                        <option value="fineciclo" <?php echo $groupBy == 'fineciclo' ? 'selected' : ''; ?>>FINECICLO</option>
+                        <option value="ncicli" <?php echo $groupBy == 'ncicli' ? 'selected' : ''; ?>>NCICLI</option>
+                        <!-- Add more options for other columns as needed -->
+                    </select>
                     <input type="text" name="search" class="form-control" value="<?php echo htmlspecialchars($search); ?>">
                     <button type="submit"  class="btn btn-primary">Search</button>
                 </div>            
@@ -386,13 +430,13 @@ if ($search !== '') {
                 <ul class="pagination" style="float: right; margin:0">
                     <?php if ($current_page > 1): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page - 1; ?>">Previous</a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page - 1; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">Previous</a>
                         </li>
                     <?php endif; ?>
 
                     <?php if ($current_page > PAGINATION_DISPLAY_COUNT + 1): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=1">1</a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=1&search=<?= $search ?>&group_by=<?= $groupBy ?>">1</a>
                         </li>
                         <?php if ($current_page > PAGINATION_DISPLAY_COUNT + 2): ?>
                             <li class="page-item disabled"><span class="page-link">...</span></li>
@@ -401,7 +445,7 @@ if ($search !== '') {
 
                     <?php for ($i = max(1, $current_page - PAGINATION_DISPLAY_COUNT); $i <= min($total_pages, $current_page + PAGINATION_DISPLAY_COUNT); $i++): ?>
                         <li class="page-item <?php if ($i == $current_page) echo 'active'; ?>">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $i; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>"><?php echo $i; ?></a>
                         </li>
                     <?php endfor; ?>
 
@@ -410,13 +454,13 @@ if ($search !== '') {
                             <li class="page-item disabled"><span class="page-link">...</span></li>
                         <?php endif; ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $total_pages; ?>"><?php echo $total_pages; ?></a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $total_pages; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>"><?php echo $total_pages; ?></a>
                         </li>
                     <?php endif; ?>
 
                     <?php if ($current_page < $total_pages): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page + 1; ?>">Next</a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page + 1; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">Next</a>
                         </li>
                     <?php endif; ?>
                 </ul>
@@ -426,32 +470,46 @@ if ($search !== '') {
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>CODICE AWP</th>
-                            <th>DENOMINAZIONE</th>
-                            <th>UBICAZIONE</th>
-                            <th>INDIRRIZO</th>
-                            <th>COMUNE</th>
-                            <th>PROVINCIA</th>
-                            <th>REGIONE</th>
-                            <th>3</th>
-                            <th>CICLOIN</th>
-                            <th>CICLOUT</th>
-                            <th>DATA</th>
-                            <th>SOPRA</th>
-                            <th>VINCITA</th>
-                            <th>MANCA</th>
-                            <th>CICLO</th>
-                            <th>%</th>
-                            <th>TOTIN</th>
-                            <th>TOTOUT</th>
-                            <th>FINECICLO</th>
-                            <th>NCICLI</th>
+                            <th><a href="?sort=codice_awp&order=<?php echo ($sortColumn == 'codice_awp' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CODICE AWP</a></th>
+                            <th><a href="?sort=denominazione&order=<?php echo ($sortColumn == 'denominazione' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">DENOMINAZIONE</a></th>
+                            <th><a href="?sort=ubicazione&order=<?php echo ($sortColumn == 'ubicazione' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">UBICAZIONE</a></th>
+                            <th><a href="?sort=indirrizo&order=<?php echo ($sortColumn == 'indirrizo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">INDIRRIZO</a></th>
+                            <th><a href="?sort=comune&order=<?php echo ($sortColumn == 'comune' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">COMUNE</a></th>
+                            <th><a href="?sort=provincia&order=<?php echo ($sortColumn == 'provincia' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">PROVINCIA</a></th>
+                            <th><a href="?sort=regione&order=<?php echo ($sortColumn == 'regione' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">REGIONE</a></th>
+                            <th><a href="?sort=3&order=<?php echo ($sortColumn == '3' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">3</a></th>
+                            <th><a href="?sort=ciclo&order=<?php echo ($sortColumn == 'ciclo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CICLOIN</a></th>
+                            <th><a href="?sort=ciclout&order=<?php echo ($sortColumn == 'ciclout' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CICLOUT</a></th>
+                            <th><a href="?sort=data&order=<?php echo ($sortColumn == 'data' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">DATA</a></th>
+                            <th><a href="?sort=sopra&order=<?php echo ($sortColumn == 'sopra' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">SOPRA</a></th>
+                            <th><a href="?sort=vincita&order=<?php echo ($sortColumn == 'vincita' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">VINCITA</a></th>
+                            <th><a href="?sort=manca&order=<?php echo ($sortColumn == 'manca' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">MANCA</a></th>
+                            <th><a href="?sort=ciclo&order=<?php echo ($sortColumn == 'ciclo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CICLO</a></th>
+                            <th><a href="?sort=percent&order=<?php echo ($sortColumn == 'percent' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">%</a></th>
+                            <th><a href="?sort=totin&order=<?php echo ($sortColumn == 'totin' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">TOTIN</a></th>
+                            <th><a href="?sort=totout&order=<?php echo ($sortColumn == 'totout' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">TOTOUT</a></th>
+                            <th><a href="?sort=fineciclo&order=<?php echo ($sortColumn == 'fineciclo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">FINECICLO</a></th>
+                            <th><a href="?sort=ncicli&order=<?php echo ($sortColumn == 'ncicli' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">NCICLI</a></th>
                         </tr>
                     </thead>
                     <tbody>
                         <?php if ($result1->num_rows > 0): ?>
                             <?php $index = $offset + 1; ?>
                             <?php while ($row = $result1->fetch_assoc()): ?>
+                                
+                                <?php 
+                                      $I = empty($row['ciclo']) ? 0 : (intval($row['totin']) / 100) % $row['ciclo'];
+                                      $O = empty($row['ciclo']) ? 0 : $row['ciclo'];
+                                      $P = empty($row['percent']) ? 0 : $row['percent'];
+                                      $Q = empty($row['totin']) ? 0 : $row['totin'] / 100;
+                                      $T = empty($row['ciclo']) ? 0 : floor(intval($row['totin']) / intval($row['ciclo']) / 100);
+                                      $S = $row['fineciclo'];
+                                      $R = empty($row['totout']) ? 0 : intval($row['totout']) / 100;
+                                      $J = $R - $T * ($O * intval($P) / 100 + $S);
+                                      $L = $I * intval($P) / 100 - $J;
+                                      $N = $O - $I;
+                                      $M = $N * intval($P) / 100 - $N + $L;
+                                ?>
                                 <tr>
                                     <td><?php echo $index++; ?></td>
                                     <td><?php echo $row['codice_awp']; ?></td>
@@ -462,35 +520,18 @@ if ($search !== '') {
                                     <td><?php echo $row['provincia']; ?></td>
                                     <td><?php echo $row['regione']; ?></td>
                                     <td><?php echo $row['3']; ?></td>
-
-                                    <?php 
-                                        $I_ = empty($row['ciclo']) ? 0 : ($row['totin'] / 100) % $row['ciclo'];
-                                        
-                                        $O_ = empty($row['ciclo']) ? 0 : $row['ciclo'];
-                                        $P_ = empty($row['percent']) ? 0 : $row['percent'];
-                                        $Q_ = empty($row['totin']) ? 0 : $row['totin'] / 100;
-                                        $T_ = empty($row['ciclo']) ? 0 : floor($row['totin'] / $row['ciclo'] / 100);
-                                        $S_ = $row['fineciclo'];
-                                        $R_ = empty($row['totout']) ? 0 : $row['totout'] / 100;
-
-                                        $J_ = $R_ - $T_ * ($O_ * $P_  / 100 + $S_);
-                                        $L_ = $I_ * $P_ / 100 - $J_;
-                                        $N_ = $O_ - $I_;
-                                        $M_ = $N_ * $P_ / 100 - $N_ + $L_;
-
-                                    ?>
-                                    <td><?php echo $I_ ? $I_ : "";?></td>
-                                    <td><?php echo $J_ ? $J_ : ""; ?></td>
+                                    <td><?php echo $I ? $I : "";?></td>
+                                    <td><?php echo $J ? $J : ""; ?></td>
                                     <td><?php echo $row['data']; ?></td>
-                                    <td><?php echo $L_ ? $L_ : ""; ?></td>
-                                    <td><?php echo $M_ ? $M_ : ""; ?></td>
-                                    <td><?php echo $N_ ? $N_ : ""; ?></td>
-                                    <td><?php echo $O_ ? $O_ : ""; ?></td>
-                                    <td><?php echo $P_ ? $P_ : ""; ?></td>
-                                    <td><?php echo $Q_ ? $Q_ : ""; ?></td>
-                                    <td><?php echo $R_ ? $R_ : ""; ?></td>
-                                    <td><?php echo $S_ ? $S_ : ""; ?></td>
-                                    <td><?php echo $T_ ? $T_ : "";?></td>
+                                    <td><?php echo $L ? $L : ""; ?></td>
+                                    <td><?php echo $M ? $M : ""; ?></td>
+                                    <td><?php echo $N ? $N : ""; ?></td>
+                                    <td><?php echo $O ? $O : ""; ?></td>
+                                    <td><?php echo $P ? $P : ""; ?></td>
+                                    <td><?php echo $Q ? $Q : ""; ?></td>
+                                    <td><?php echo $R ? $R : ""; ?></td>
+                                    <td><?php echo $S ? $S : ""; ?></td>
+                                    <td><?php echo $T ? $T : "";?></td>
                                 </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
