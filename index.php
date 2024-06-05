@@ -221,7 +221,7 @@ if(isset($_POST['submit'])){
             `ubicazione` = (SELECT IFNULL(`codice_ubicazione`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
             `data` = (SELECT IFNULL(`ultima_lett`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
             `percent` = (SELECT IFNULL(SUBSTR(`vincite`, 1, 2), '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
-            `totin` = (SELECT IFNULL(`ult_cnttotin`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
+            `totin` = (SELECT IFNULL(`ult_cnttotin`/100, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` and `parc`.`ult_cnttotin` is not null and trim(`parc`.`ult_cnttotin`) <> '' LIMIT 1),
             `totout` = (SELECT IFNULL(`ult_cnttotot`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
             `3` = (SELECT IFNULL(`titolo`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1)");
 
@@ -233,7 +233,12 @@ if(isset($_POST['submit'])){
 
         $conn->query("UPDATE `lotto` SET 
             `ciclo` = (SELECT IFNULL(`colH`, '') FROM `ciclo` WHERE `ciclo`.`colA` = `lotto`.`3` LIMIT 1)");
-
+        $conn->query("UPDATE `lotto` SET `ncicli` = FLOOR(`totin` / `ciclo`) WHERE `totin` is not null and trim(`totin`) <> '' and `ciclo` is not null and trim(`ciclo`) <> '';");
+        $conn->query("UPDATE `lotto` SET `cicloin` = MOD(`totin`, `ciclo`) WHERE `totin` is not null and trim(`totin`) <> '' and `ciclo` is not null and trim(`ciclo`) <> '';");
+        $conn->query("UPDATE `lotto` SET `ciclout` = `totout` - `ncicli` * (`ciclo` * `percent` / 100 + `fineciclo`) WHERE `totout` is not null and trim(`totout`) <> '' and `fineciclo` is not null and trim(`fineciclo`) <> '' and `percent` is not null and trim(`percent`) <> '' and `ciclo` is not null and trim(`ciclo`) <> '';");
+        $conn->query("UPDATE `lotto` SET `sopra` = `cicloin` * `percent` / 100 - `ciclout` WHERE `ciclout` is not null and trim(`ciclout`) <> '' and `percent` is not null and trim(`percent`) <> '' and `cicloin` is not null and trim(`cicloin`) <> '';");
+        $conn->query("UPDATE `lotto` SET `manca` = `ciclo` - `cicloin` WHERE `ciclo` is not null and trim(`ciclo`) <> '' and `cicloin` is not null and trim(`cicloin`) <> '';");
+        $conn->query("UPDATE `lotto` SET `vincita` = `manca` * `percent` / 100 - `manca` + `sopra` WHERE `manca` is not null and trim(`manca`) <> '' and `percent` is not null and trim(`percent`) <> '' and `sopra` is not null and trim(`sopra`) <> '';");
     }
 }
 
@@ -300,7 +305,8 @@ if ($search !== '') {
     $orderClause .= "$sortColumn $sortOrder";
    
     if (!empty($groupBy)) {
-        $sql = "SELECT * FROM lotto WHERE $groupBy LIKE '%$search%' $orderClause LIMIT $offset, $records_per_page";    
+        $sql = "SELECT * FROM lotto WHERE $groupBy LIKE '%$search%' $orderClause LIMIT $offset, $records_per_page";
+        print_r($sql);    
     } else {
         $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR percent LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%' $orderClause LIMIT $offset, $records_per_page";
     }
@@ -327,7 +333,6 @@ if ($search !== '') {
     } else {
         $sql = "SELECT * FROM lotto $orderClause LIMIT $offset, $records_per_page";
     }
-    print_r($sql);
     $result1 = $conn->query($sql);
 }
 
@@ -478,7 +483,7 @@ if ($search !== '') {
                             <th><a href="?sort=provincia&order=<?php echo ($sortColumn == 'provincia' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">PROVINCIA</a></th>
                             <th><a href="?sort=regione&order=<?php echo ($sortColumn == 'regione' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">REGIONE</a></th>
                             <th><a href="?sort=3&order=<?php echo ($sortColumn == '3' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">3</a></th>
-                            <th><a href="?sort=ciclo&order=<?php echo ($sortColumn == 'ciclo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CICLOIN</a></th>
+                            <th><a href="?sort=cicloin&order=<?php echo ($sortColumn == 'cicloin' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CICLOIN</a></th>
                             <th><a href="?sort=ciclout&order=<?php echo ($sortColumn == 'ciclout' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CICLOUT</a></th>
                             <th><a href="?sort=data&order=<?php echo ($sortColumn == 'data' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">DATA</a></th>
                             <th><a href="?sort=sopra&order=<?php echo ($sortColumn == 'sopra' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">SOPRA</a></th>
@@ -496,20 +501,6 @@ if ($search !== '') {
                         <?php if ($result1->num_rows > 0): ?>
                             <?php $index = $offset + 1; ?>
                             <?php while ($row = $result1->fetch_assoc()): ?>
-                                
-                                <?php 
-                                      $I = empty($row['ciclo']) ? 0 : (intval($row['totin']) / 100) % $row['ciclo'];
-                                      $O = empty($row['ciclo']) ? 0 : $row['ciclo'];
-                                      $P = empty($row['percent']) ? 0 : $row['percent'];
-                                      $Q = empty($row['totin']) ? 0 : $row['totin'] / 100;
-                                      $T = empty($row['ciclo']) ? 0 : floor(intval($row['totin']) / intval($row['ciclo']) / 100);
-                                      $S = $row['fineciclo'];
-                                      $R = empty($row['totout']) ? 0 : intval($row['totout']) / 100;
-                                      $J = $R - $T * ($O * intval($P) / 100 + $S);
-                                      $L = $I * intval($P) / 100 - $J;
-                                      $N = $O - $I;
-                                      $M = $N * intval($P) / 100 - $N + $L;
-                                ?>
                                 <tr>
                                     <td><?php echo $index++; ?></td>
                                     <td><?php echo $row['codice_awp']; ?></td>
@@ -520,18 +511,18 @@ if ($search !== '') {
                                     <td><?php echo $row['provincia']; ?></td>
                                     <td><?php echo $row['regione']; ?></td>
                                     <td><?php echo $row['3']; ?></td>
-                                    <td><?php echo $I ? $I : "";?></td>
-                                    <td><?php echo $J ? $J : ""; ?></td>
+                                    <td><?php echo $row['cicloin'];?></td>
+                                    <td><?php echo $row['ciclout']; ?></td>
                                     <td><?php echo $row['data']; ?></td>
-                                    <td><?php echo $L ? $L : ""; ?></td>
-                                    <td><?php echo $M ? $M : ""; ?></td>
-                                    <td><?php echo $N ? $N : ""; ?></td>
-                                    <td><?php echo $O ? $O : ""; ?></td>
-                                    <td><?php echo $P ? $P : ""; ?></td>
-                                    <td><?php echo $Q ? $Q : ""; ?></td>
-                                    <td><?php echo $R ? $R : ""; ?></td>
-                                    <td><?php echo $S ? $S : ""; ?></td>
-                                    <td><?php echo $T ? $T : "";?></td>
+                                    <td><?php echo $row['sopra']; ?></td>
+                                    <td><?php echo $row['vincita']; ?></td>
+                                    <td><?php echo $row['manca']; ?></td>
+                                    <td><?php echo $row['ciclo']; ?></td>
+                                    <td><?php echo $row['percent']; ?></td>
+                                    <td><?php echo $row['totin']; ?></td>
+                                    <td><?php echo $row['totout']; ?></td>
+                                    <td><?php echo $row['fineciclo']; ?></td>
+                                    <td><?php echo $row['ncicli'];?></td>
                                 </tr>
                             <?php endwhile; ?>
                         <?php else: ?>
