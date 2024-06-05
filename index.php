@@ -220,7 +220,7 @@ if(isset($_POST['submit'])){
             `denominazione` = (SELECT IFNULL(`ubicazione`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
             `ubicazione` = (SELECT IFNULL(`codice_ubicazione`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
             `data` = (SELECT IFNULL(`ultima_lett`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
-            `%` = (SELECT IFNULL(SUBSTR(`vincite`, 1, 2), '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
+            `percent` = (SELECT IFNULL(SUBSTR(`vincite`, 1, 2), '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
             `totin` = (SELECT IFNULL(`ult_cnttotin`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
             `totout` = (SELECT IFNULL(`ult_cnttotot`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1),
             `3` = (SELECT IFNULL(`titolo`, '') FROM `parc` WHERE `parc`.`codid` = `lotto`.`codice_awp` LIMIT 1)");
