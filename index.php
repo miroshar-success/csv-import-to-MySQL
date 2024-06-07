@@ -306,7 +306,6 @@ if ($search !== '') {
    
     if (!empty($groupBy)) {
         $sql = "SELECT * FROM lotto WHERE $groupBy LIKE '%$search%' $orderClause LIMIT $offset, $records_per_page";
-        print_r($sql);    
     } else {
         $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR percent LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%' $orderClause LIMIT $offset, $records_per_page";
     }
@@ -435,13 +434,13 @@ if ($search !== '') {
                 <ul class="pagination" style="float: right; margin:0">
                     <?php if ($current_page > 1): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page - 1; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">Previous</a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page - 1; ?>&sort=<?= $sortColumn ?>&order=<?= $sortOrder ?>&group_by=<?= $groupBy ?>">Previous</a>
                         </li>
                     <?php endif; ?>
 
                     <?php if ($current_page > PAGINATION_DISPLAY_COUNT + 1): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=1&search=<?= $search ?>&group_by=<?= $groupBy ?>">1</a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=1&sort=<?= $sortColumn ?>&order=<?= $sortOrder ?>&group_by=<?= $groupBy ?>">1</a>
                         </li>
                         <?php if ($current_page > PAGINATION_DISPLAY_COUNT + 2): ?>
                             <li class="page-item disabled"><span class="page-link">...</span></li>
@@ -450,7 +449,7 @@ if ($search !== '') {
 
                     <?php for ($i = max(1, $current_page - PAGINATION_DISPLAY_COUNT); $i <= min($total_pages, $current_page + PAGINATION_DISPLAY_COUNT); $i++): ?>
                         <li class="page-item <?php if ($i == $current_page) echo 'active'; ?>">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $i; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>"><?php echo $i; ?></a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $i; ?>&sort=<?= $sortColumn ?>&order=<?= $sortOrder ?>&group_by=<?= $groupBy ?>"><?php echo $i; ?></a>
                         </li>
                     <?php endfor; ?>
 
@@ -459,13 +458,13 @@ if ($search !== '') {
                             <li class="page-item disabled"><span class="page-link">...</span></li>
                         <?php endif; ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $total_pages; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>"><?php echo $total_pages; ?></a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $total_pages; ?>&sort=<?= $sortColumn ?>&order=<?= $sortOrder ?>&group_by=<?= $groupBy ?>"><?php echo $total_pages; ?></a>
                         </li>
                     <?php endif; ?>
 
                     <?php if ($current_page < $total_pages): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page + 1; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">Next</a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page + 1; ?>&sort=<?= $sortColumn ?>&order=<?= $sortOrder ?>&group_by=<?= $groupBy ?>">Next</a>
                         </li>
                     <?php endif; ?>
                 </ul>
@@ -475,26 +474,26 @@ if ($search !== '') {
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th><a href="?sort=codice_awp&order=<?php echo ($sortColumn == 'codice_awp' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CODICE AWP</a></th>
-                            <th><a href="?sort=denominazione&order=<?php echo ($sortColumn == 'denominazione' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">DENOMINAZIONE</a></th>
-                            <th><a href="?sort=ubicazione&order=<?php echo ($sortColumn == 'ubicazione' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">UBICAZIONE</a></th>
-                            <th><a href="?sort=indirrizo&order=<?php echo ($sortColumn == 'indirrizo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">INDIRRIZO</a></th>
-                            <th><a href="?sort=comune&order=<?php echo ($sortColumn == 'comune' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">COMUNE</a></th>
-                            <th><a href="?sort=provincia&order=<?php echo ($sortColumn == 'provincia' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">PROVINCIA</a></th>
-                            <th><a href="?sort=regione&order=<?php echo ($sortColumn == 'regione' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">REGIONE</a></th>
-                            <th><a href="?sort=3&order=<?php echo ($sortColumn == '3' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">3</a></th>
-                            <th><a href="?sort=cicloin&order=<?php echo ($sortColumn == 'cicloin' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CICLOIN</a></th>
-                            <th><a href="?sort=ciclout&order=<?php echo ($sortColumn == 'ciclout' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CICLOUT</a></th>
-                            <th><a href="?sort=data&order=<?php echo ($sortColumn == 'data' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">DATA</a></th>
-                            <th><a href="?sort=sopra&order=<?php echo ($sortColumn == 'sopra' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">SOPRA</a></th>
-                            <th><a href="?sort=vincita&order=<?php echo ($sortColumn == 'vincita' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">VINCITA</a></th>
-                            <th><a href="?sort=manca&order=<?php echo ($sortColumn == 'manca' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">MANCA</a></th>
-                            <th><a href="?sort=ciclo&order=<?php echo ($sortColumn == 'ciclo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">CICLO</a></th>
-                            <th><a href="?sort=percent&order=<?php echo ($sortColumn == 'percent' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">%</a></th>
-                            <th><a href="?sort=totin&order=<?php echo ($sortColumn == 'totin' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">TOTIN</a></th>
-                            <th><a href="?sort=totout&order=<?php echo ($sortColumn == 'totout' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">TOTOUT</a></th>
-                            <th><a href="?sort=fineciclo&order=<?php echo ($sortColumn == 'fineciclo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">FINECICLO</a></th>
-                            <th><a href="?sort=ncicli&order=<?php echo ($sortColumn == 'ncicli' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>">NCICLI</a></th>
+                            <th><a href="?sort=codice_awp&order=<?php echo ($sortColumn == 'codice_awp' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">CODICE AWP</a></th>
+                            <th><a href="?sort=denominazione&order=<?php echo ($sortColumn == 'denominazione' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">DENOMINAZIONE</a></th>
+                            <th><a href="?sort=ubicazione&order=<?php echo ($sortColumn == 'ubicazione' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">UBICAZIONE</a></th>
+                            <th><a href="?sort=indirrizo&order=<?php echo ($sortColumn == 'indirrizo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">INDIRRIZO</a></th>
+                            <th><a href="?sort=comune&order=<?php echo ($sortColumn == 'comune' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">COMUNE</a></th>
+                            <th><a href="?sort=provincia&order=<?php echo ($sortColumn == 'provincia' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">PROVINCIA</a></th>
+                            <th><a href="?sort=regione&order=<?php echo ($sortColumn == 'regione' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">REGIONE</a></th>
+                            <th><a href="?sort=3&order=<?php echo ($sortColumn == '3' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">3</a></th>
+                            <th><a href="?sort=cicloin&order=<?php echo ($sortColumn == 'cicloin' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">CICLOIN</a></th>
+                            <th><a href="?sort=ciclout&order=<?php echo ($sortColumn == 'ciclout' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">CICLOUT</a></th>
+                            <th><a href="?sort=data&order=<?php echo ($sortColumn == 'data' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">DATA</a></th>
+                            <th><a href="?sort=sopra&order=<?php echo ($sortColumn == 'sopra' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">SOPRA</a></th>
+                            <th><a href="?sort=vincita&order=<?php echo ($sortColumn == 'vincita' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">VINCITA</a></th>
+                            <th><a href="?sort=manca&order=<?php echo ($sortColumn == 'manca' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">MANCA</a></th>
+                            <th><a href="?sort=ciclo&order=<?php echo ($sortColumn == 'ciclo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">CICLO</a></th>
+                            <th><a href="?sort=percent&order=<?php echo ($sortColumn == 'percent' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">%</a></th>
+                            <th><a href="?sort=totin&order=<?php echo ($sortColumn == 'totin' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">TOTIN</a></th>
+                            <th><a href="?sort=totout&order=<?php echo ($sortColumn == 'totout' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">TOTOUT</a></th>
+                            <th><a href="?sort=fineciclo&order=<?php echo ($sortColumn == 'fineciclo' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">FINECICLO</a></th>
+                            <th><a href="?sort=ncicli&order=<?php echo ($sortColumn == 'ncicli' && $sortOrder == 'ASC') ? 'DESC' : 'ASC'; ?>&search=<?= $search ?>&group_by=<?= $groupBy ?>&page=<?php echo $current_page; ?>">NCICLI</a></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -538,13 +537,13 @@ if ($search !== '') {
                 <ul class="pagination" style="float: right; margin-top:0">
                     <?php if ($current_page > 1): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page - 1; ?>">Previous</a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page - 1; ?>&sort=<?= $sortColumn ?>&order=<?= $sortOrder ?>&group_by=<?= $groupBy ?>">Previous</a>
                         </li>
                     <?php endif; ?>
 
                     <?php if ($current_page > PAGINATION_DISPLAY_COUNT + 1): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=1">1</a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=1&sort=<?= $sortColumn ?>&order=<?= $sortOrder ?>&group_by=<?= $groupBy ?>">1</a>
                         </li>
                         <?php if ($current_page > PAGINATION_DISPLAY_COUNT + 2): ?>
                             <li class="page-item disabled"><span class="page-link">...</span></li>
@@ -553,7 +552,7 @@ if ($search !== '') {
 
                     <?php for ($i = max(1, $current_page - PAGINATION_DISPLAY_COUNT); $i <= min($total_pages, $current_page + PAGINATION_DISPLAY_COUNT); $i++): ?>
                         <li class="page-item <?php if ($i == $current_page) echo 'active'; ?>">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $i; ?>"><?php echo $i; ?></a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $i; ?>&sort=<?= $sortColumn ?>&order=<?= $sortOrder ?>&group_by=<?= $groupBy ?>"><?php echo $i; ?></a>
                         </li>
                     <?php endfor; ?>
 
@@ -562,13 +561,13 @@ if ($search !== '') {
                             <li class="page-item disabled"><span class="page-link">...</span></li>
                         <?php endif; ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $total_pages; ?>"><?php echo $total_pages; ?></a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $total_pages; ?>&sort=<?= $sortColumn ?>&order=<?= $sortOrder ?>&group_by=<?= $groupBy ?>"><?php echo $total_pages; ?></a>
                         </li>
                     <?php endif; ?>
 
                     <?php if ($current_page < $total_pages): ?>
                         <li class="page-item">
-                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page + 1; ?>">Next</a>
+                            <a class="page-link" href="?search=<?php echo urlencode($search); ?>&page=<?php echo $current_page + 1; ?>&sort=<?= $sortColumn ?>&order=<?= $sortOrder ?>&group_by=<?= $groupBy ?>">Next</a>
                         </li>
                     <?php endif; ?>
                 </ul>
