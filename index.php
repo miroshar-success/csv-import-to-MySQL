@@ -236,7 +236,7 @@ if(isset($_POST['submit'])){
         $conn->query("UPDATE `lotto` SET `ncicli` = FLOOR(`totin` / `ciclo`) WHERE `totin` is not null and trim(`totin`) <> '' and `ciclo` is not null and trim(`ciclo`) <> '';");
         $conn->query("UPDATE `lotto` SET `cicloin` = MOD(`totin`, `ciclo`) WHERE `totin` is not null and trim(`totin`) <> '' and `ciclo` is not null and trim(`ciclo`) <> '';");
         $conn->query("UPDATE `lotto` SET `ciclout` = `totout` - `ncicli` * (`ciclo` * `percent` / 100 + `fineciclo`) WHERE `totout` is not null and trim(`totout`) <> '' and `fineciclo` is not null and trim(`fineciclo`) <> '' and `percent` is not null and trim(`percent`) <> '' and `ciclo` is not null and trim(`ciclo`) <> '';");
-        $conn->query("UPDATE `lotto` SET `sopra` = ROUND(`cicloin` * `percent` / 100 - `ciclout`) WHERE `ciclout` is not null and trim(`ciclout`) <> '' and `percent` is not null and trim(`percent`) <> '' and `cicloin` is not null and trim(`cicloin`) <> '';");
+        $conn->query("UPDATE `lotto` SET `sopra` = ROUND(`cicloin` * `percent` / 100 - `ciclout`, 1) WHERE `ciclout` is not null and trim(`ciclout`) <> '' and `percent` is not null and trim(`percent`) <> '' and `cicloin` is not null and trim(`cicloin`) <> '';");
         $conn->query("UPDATE `lotto` SET `manca` = `ciclo` - `cicloin` WHERE `ciclo` is not null and trim(`ciclo`) <> '' and `cicloin` is not null and trim(`cicloin`) <> '';");
         $conn->query("UPDATE `lotto` SET `vincita` = ROUND(`manca` * `percent` / 100 - `manca` + `sopra`) WHERE `manca` is not null and trim(`manca`) <> '' and `percent` is not null and trim(`percent`) <> '' and `sopra` is not null and trim(`sopra`) <> '';");
     }
