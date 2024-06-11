@@ -302,7 +302,13 @@ if ($search !== '') {
 
     
     $orderClause = " ORDER BY ";
-    $orderClause .= "$sortColumn $sortOrder";
+    if($sortColumn == 'cicloin' || $sortColumn == 'ciclout' || $sortColumn == 'sopra' || $sortColumn == 'vincita' || $sortColumn == 'manca' || $sortColumn == 'ciclo' || $sortColumn == 'percent' || $sortColumn == 'totin' || $sortColumn == 'totout' || $sortColumn == 'fineciclo' || $sortColumn == 'ncicli') {
+        $orderClause .= "CAST($sortColumn AS UNSIGNED) $sortOrder";    
+    }
+    else {
+        $orderClause .= "$sortColumn $sortOrder";
+    }
+
    
     if (!empty($groupBy)) {
         $sql = "SELECT * FROM lotto WHERE $groupBy LIKE '%$search%' $orderClause LIMIT $offset, $records_per_page";
@@ -325,7 +331,12 @@ if ($search !== '') {
     $offset = ($current_page - 1) * $records_per_page;
 
     $orderClause = " ORDER BY ";
-    $orderClause .= "$sortColumn $sortOrder";
+    if($sortColumn == 'cicloin' || $sortColumn == 'ciclout' || $sortColumn == 'sopra' || $sortColumn == 'vincita' || $sortColumn == 'manca' || $sortColumn == 'ciclo' || $sortColumn == 'percent' || $sortColumn == 'totin' || $sortColumn == 'totout' || $sortColumn == 'fineciclo' || $sortColumn == 'ncicli') {
+        $orderClause .= "CAST($sortColumn AS DOUBLE) $sortOrder";    
+    }
+    else {
+        $orderClause .= "$sortColumn $sortOrder";
+    }
 
     if (!empty($groupBy)) {
         $sql = "SELECT * FROM lotto WHERE $groupBy LIKE '%$search%' $orderClause LIMIT $offset, $records_per_page";    
