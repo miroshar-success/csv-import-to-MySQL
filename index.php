@@ -288,7 +288,12 @@ $groupBy = isset($_GET['group_by']) ? $_GET['group_by'] : '';
 if ($search !== '') {
     // Perform search query
     $sql = "SELECT * FROM lotto WHERE codice_awp LIKE '%$search%' OR denominazione LIKE '%$search%' OR ubicazione LIKE '%$search%' OR indirrizo LIKE '%$search%' OR comune LIKE '%$search%' OR provincia LIKE '%$search%' OR regione LIKE '%$search%' OR 3 LIKE '%$search%' OR cicloin LIKE '%$search%' OR ciclout LIKE '%$search%' OR data LIKE '%$search%' OR sopra LIKE '%$search%' OR vincita LIKE '%$search%' OR manca LIKE '%$search%' OR ciclo LIKE '%$search%' OR percent LIKE '%$search%' OR totin LIKE '%$search%' OR totout LIKE '%$search%' OR fineciclo LIKE '%$search%' OR ncicli LIKE '%$search%'";
+   
+    if($groupBy != '') {
+        $sql = "SELECT * FROM lotto WHERE $groupBy LIKE '%$search%'";    
+    }
     $result = $conn->query($sql);
+    
     $total_records = $result->num_rows;
     
     $records_per_page = 10;
