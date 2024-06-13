@@ -303,7 +303,7 @@ if ($search !== '') {
     
     $orderClause = " ORDER BY ";
     if($sortColumn == 'cicloin' || $sortColumn == 'ciclout' || $sortColumn == 'sopra' || $sortColumn == 'vincita' || $sortColumn == 'manca' || $sortColumn == 'ciclo' || $sortColumn == 'percent' || $sortColumn == 'totin' || $sortColumn == 'totout' || $sortColumn == 'fineciclo' || $sortColumn == 'ncicli') {
-        $orderClause .= "CAST($sortColumn AS UNSIGNED) $sortOrder";    
+        $orderClause .= "CAST($sortColumn AS DECIMAL(10,2)) $sortOrder";    
     }
     else {
         $orderClause .= "$sortColumn $sortOrder";
@@ -332,7 +332,7 @@ if ($search !== '') {
 
     $orderClause = " ORDER BY ";
     if($sortColumn == 'cicloin' || $sortColumn == 'ciclout' || $sortColumn == 'sopra' || $sortColumn == 'vincita' || $sortColumn == 'manca' || $sortColumn == 'ciclo' || $sortColumn == 'percent' || $sortColumn == 'totin' || $sortColumn == 'totout' || $sortColumn == 'fineciclo' || $sortColumn == 'ncicli') {
-        $orderClause .= "CAST($sortColumn AS DOUBLE) $sortOrder";    
+        $orderClause .= "CAST($sortColumn AS DECIMAL(10,2)) $sortOrder";    
     }
     else {
         $orderClause .= "$sortColumn $sortOrder";
